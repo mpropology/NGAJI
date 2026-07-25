@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin Mengaji</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚙️ Panel Admin</h1>
+            <p>Perbarui progres mengaji anak</p>
+            <div class="divider"></div>
+        </header>
+
+        <div class="card">
+            <form id="admin-form">
+                <div class="form-group">
+                    <label for="nama">Nama Anak</label>
+                    <input type="text" id="nama" placeholder="Masukkan nama anak..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="tahap">Tahap</label>
+                    <select id="tahap" required>
+                        <option value="" disabled selected>Pilih tahap...</option>
+                        <option value="jilid">Jilid (Iqra)</option>
+                        <option value="quran">Al-Qur'an</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="jilid-group" hidden>
+                    <label for="jilid">Jilid</label>
+                    <select id="jilid">
+                        <option value="" disabled selected>Pilih jilid...</option>
+                        <option value="1">Jilid 1</option>
+                        <option value="2">Jilid 2</option>
+                        <option value="3">Jilid 3</option>
+                        <option value="4">Jilid 4</option>
+                        <option value="5">Jilid 5</option>
+                        <option value="6">Jilid 6</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="quran-group" hidden>
+                    <label for="juz">Juz</label>
+                    <select id="juz">
+                        <option value="" disabled selected>Pilih juz...</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="halaman">Halaman</label>
+                    <input type="number" id="halaman" min="1" placeholder="Contoh: 15" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="catatan">Catatan (opsional)</label>
+                    <input type="text" id="catatan" placeholder="Contoh: Al-Ma'idah, lancar tajwid">
+                </div>
+
+                <button type="submit" class="btn btn-primary">Simpan Progres</button>
+                <p id="status-msg" class="status-msg" role="status"></p>
+            </form>
+        </div>
+
+        <div class="footer-links">
+            <a href="index.html" class="btn">Kembali ke Leaderboard</a>
+        </div>
+    </div>
+
+    <script>
+        // GANTI URL DI BAWAH DENGAN URL DARI GOOGLE APPS SCRIPT ANDA
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_4nhhKecTeNh-6uxI8ZTtiv7LxGnWTLG0bpT3CsghNr3vS545LjHDNMhLtiwRf5qa/exec';
+
+        // Isi pilihan Juz 1-30
+        const juzSelect = document.getElementById('juz');
+        for (let i = 1; i <= 30; i++) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = 'Juz ' + i;
+            juzSelect.appendChild(opt);
+        }
+
+        const tahapSelect = document.getElementById('tahap');
+        const jilidGroup = document.getElementById('jilid-group');
+        const quranGroup = document.getElementById('quran-group');
+        const jilidSelect = document.getElementById('jilid');
+
+        tahapSelect.addEventListener('change', function () {
+            const isJilid = this.value === 'jilid';
+            const isQuran = this.value === 'quran';
+
+            jilidGroup.hidden = !isJilid;
+            jilidSelect.required = isJilid;
+            if (!isJilid) jilidSelect.value = '';
+
+            quranGroup.hidden = !isQuran;
+            juzSelect.required = isQuran;
+            if (!isQuran) juzSelect.value = '';
+        });
+
+        const form = document.getElementById('admin-form');
+        const statusMsg = document.getElementById('status-msg');
+
+        function showStatus(text, type) {
+            statusMsg.textContent = text;
+            statusMsg.className = 'status-msg show ' + type;
+        }
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const btn = this.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Menyimpan...';
+            btn.disabled = true;
+            statusMsg.className = 'status-msg';
+
+            const data = {
+                nama: document.getElementById('nama').value.trim(),
+                tahap: tahapSelect.value,
+                jilid: tahapSelect.value === 'jilid' ? jilidSelect.value : '',
+                juz: tahapSelect.value === 'quran' ? juzSelect.value : '',
+                halaman: document.getElementById('halaman').value.trim(),
+                catatan: document.getElementById('catatan').value.trim()
+            };
+
+            try {
+                // Sengaja tidak set header Content-Type: JSON, agar browser tidak
+                // mengirim preflight OPTIONS request (Apps Script web app tidak menanganinya).
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                });
+                showStatus('Progres berhasil disimpan.', 'success');
+                this.reset();
+                jilidGroup.hidden = true;
+                quranGroup.hidden = true;
+                document.getElementById('nama').focus();
+            } catch (error) {
+                showStatus('Terjadi kesalahan jaringan. Coba lagi.', 'error');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard Progres Mengaji</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏆 Leaderboard Mengaji</h1>
+            <p>Ranking capaian bacaan dan hafalan anak-anak panti</p>
+            <div class="divider"></div>
+        </header>
+
+        <div class="card">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Cari nama anak..." aria-label="Cari nama anak">
+            </div>
+            <table id="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Peringkat</th>
+                        <th>Nama</th>
+                        <th>Capaian</th>
+                        <th>Halaman</th>
+                        <th>Pembaruan Terakhir</th>
+                    </tr>
+                </thead>
+                <tbody id="student-data"></tbody>
+            </table>
+        </div>
+
+        <div class="footer-links">
+            <a href="admin.html" class="btn">Masuk ke Panel Admin</a>
+        </div>
+    </div>
+
+    <script>
+        // GANTI URL DI BAWAH DENGAN URL DARI GOOGLE APPS SCRIPT ANDA
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_4nhhKecTeNh-6uxI8ZTtiv7LxGnWTLG0bpT3CsghNr3vS545LjHDNMhLtiwRf5qa/exec';
+
+        let allData = [];
+
+        // Skor gabungan agar bisa dibandingkan lintas jenjang: tahap Al-Qur'an
+        // selalu di atas tahap Jilid, lalu diurutkan dari juz/jilid, lalu halaman.
+        function scoreOf(row) {
+            const halaman = Math.min(Number(row.halaman) || 0, 99);
+            if (row.tahap === 'quran') {
+                return 10000 + (Number(row.juz) || 0) * 100 + halaman;
+            }
+            return (Number(row.jilid) || 0) * 100 + halaman;
+        }
+
+        function capaianLabel(row) {
+            if (row.tahap === 'quran') return 'Juz ' + (row.juz || '-');
+            if (row.tahap === 'jilid') return 'Jilid ' + (row.jilid || '-');
+            return '-';
+        }
+
+        function formatTanggal(value) {
+            const d = value instanceof Date ? value : new Date(value);
+            if (isNaN(d.getTime())) return '-';
+            return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        // Kelompokkan semua entri per anak, ambil capaian TERTINGGI yang pernah
+        // tercatat (bukan sekadar entri paling baru, agar tahan salah input),
+        // lalu urutkan menurun berdasarkan skor.
+        function buildLeaderboard(rows) {
+            const groups = {};
+            rows.forEach(row => {
+                const key = String(row.nama || '').trim().toLowerCase();
+                if (!key) return;
+                (groups[key] = groups[key] || []).push(row);
+            });
+
+            return Object.values(groups).map(entries => {
+                const best = entries.reduce((a, b) => (scoreOf(b) > scoreOf(a) ? b : a));
+                const latestDate = entries.reduce((latest, r) => {
+                    const d = new Date(r.tanggal);
+                    return (!latest || (!isNaN(d.getTime()) && d > latest)) ? d : latest;
+                }, null);
+                return {
+                    nama: best.nama,
+                    tahap: best.tahap,
+                    jilid: best.jilid,
+                    juz: best.juz,
+                    halaman: best.halaman,
+                    catatan: best.catatan,
+                    tanggal: latestDate,
+                    sesiCount: entries.length,
+                    score: scoreOf(best)
+                };
+            }).sort((a, b) => b.score - a.score);
+        }
+
+        function renderRows(data) {
+            const tbody = document.getElementById('student-data');
+            tbody.innerHTML = '';
+
+            if (!data.length) {
+                const tr = document.createElement('tr');
+                const td = document.createElement('td');
+                td.colSpan = 5;
+                td.className = 'empty-state';
+                td.textContent = 'Belum ada data yang cocok.';
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+                return;
+            }
+
+            data.forEach((siswa, index) => {
+                const tr = document.createElement('tr');
+
+                const tdRank = document.createElement('td');
+                tdRank.setAttribute('data-label', 'Peringkat');
+                const rankBadge = document.createElement('span');
+                rankBadge.className = 'rank-badge' + (index === 0 ? ' top' : '');
+                rankBadge.textContent = index + 1;
+                tdRank.appendChild(rankBadge);
+
+                const tdNama = document.createElement('td');
+                tdNama.setAttribute('data-label', 'Nama');
+                const strong = document.createElement('strong');
+                strong.textContent = siswa.nama || '-';
+                const sesiNote = document.createElement('div');
+                sesiNote.className = 'sub-note';
+                sesiNote.textContent = siswa.sesiCount + ' sesi tercatat';
+                tdNama.append(strong, sesiNote);
+
+                const tdCapaian = document.createElement('td');
+                tdCapaian.setAttribute('data-label', 'Capaian');
+                const capaianBadge = document.createElement('span');
+                capaianBadge.className = 'capaian-badge';
+                capaianBadge.textContent = capaianLabel(siswa);
+                tdCapaian.appendChild(capaianBadge);
+                if (siswa.catatan) {
+                    const catatanNote = document.createElement('div');
+                    catatanNote.className = 'sub-note';
+                    catatanNote.textContent = siswa.catatan;
+                    tdCapaian.appendChild(catatanNote);
+                }
+
+                const tdHalaman = document.createElement('td');
+                tdHalaman.setAttribute('data-label', 'Halaman');
+                tdHalaman.textContent = siswa.halaman || '-';
+
+                const tdTanggal = document.createElement('td');
+                tdTanggal.setAttribute('data-label', 'Pembaruan Terakhir');
+                tdTanggal.textContent = formatTanggal(siswa.tanggal);
+
+                tr.append(tdRank, tdNama, tdCapaian, tdHalaman, tdTanggal);
+                tbody.appendChild(tr);
+            });
+        }
+
+        function applyFilter() {
+            const q = document.getElementById('search-input').value.trim().toLowerCase();
+            const filtered = q ? allData.filter(s => (s.nama || '').toLowerCase().includes(q)) : allData;
+            renderRows(filtered);
+        }
+
+        async function loadLeaderboard() {
+            const tbody = document.getElementById('student-data');
+            tbody.innerHTML = '<tr><td colspan="5" class="loading-state">Memuat data progres...</td></tr>';
+
+            try {
+                const response = await fetch(SCRIPT_URL);
+                if (!response.ok) throw new Error('Respon server tidak valid');
+                const data = await response.json();
+
+                allData = buildLeaderboard(Array.isArray(data) ? data : []);
+                renderRows(allData);
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="5" class="error-state">Gagal memuat data. Pastikan koneksi internet stabil.</td></tr>';
+            }
+        }
+
+        document.getElementById('search-input').addEventListener('input', applyFilter);
+        window.onload = loadLeaderboard;
+    </script>
+</body>
+</html>
