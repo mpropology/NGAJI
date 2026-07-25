@@ -44,7 +44,40 @@
             alert('Fungsi simpan siap dihubungkan dengan database/Google Sheets!');
             this.reset();
         });
+    <script>
+        // GANTI URL DI BAWAH DENGAN URL DARI GOOGLE APPS SCRIPT ANDA
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx_4nhhKecTeNh-6uxI8ZTtiv7LxGnWTLG0bpT3CsghNr3vS545LjHDNMhLtiwRf5qa/exec';
+
+        document.getElementById('admin-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const btn = this.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Menyimpan...';
+            btn.disabled = true;
+
+            const data = {
+                nama: document.getElementById('nama').value,
+                capaian: document.getElementById('capaian').value,
+                detail: document.getElementById('detail').value
+            };
+
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                });
+                alert('Progres siswa berhasil disimpan!');
+                this.reset();
+            } catch (error) {
+                alert('Terjadi kesalahan jaringan. Coba lagi.');
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        });
     </script>
+    
 </body>
 </html>
 
