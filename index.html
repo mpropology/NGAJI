@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard Progres Mengaji</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏆 Leaderboard Mengaji</h1>
+            <p>Pantau progres bacaan dan hafalan siswa</p>
+        </header>
+
+        <div class="card">
+            <table id="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Peringkat</th>
+                        <th>Nama Siswa</th>
+                        <th>Capaian (Surah/Jilid)</th>
+                        <th>Ayat/Halaman</th>
+                        <th>Pembaruan Terakhir</th>
+                    </tr>
+                </thead>
+                <tbody id="student-data">
+                    <!-- Data JSON akan dimuat di sini oleh JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer-links">
+            <a href="admin.html" class="btn">Masuk ke Panel Admin</a>
+        </div>
+    </div>
+
+    <script>
+        // Simulasi pengambilan data JSON (Nantinya diganti dengan URL Google Sheets/API)
+        const mockData = [
+            { nama: "Budi Santoso", capaian: "Al-Baqarah", detail: "Ayat 1-15", tanggal: "25 Jul 2026" },
+            { nama: "Siti Aminah", capaian: "Jilid 5", detail: "Halaman 20", tanggal: "24 Jul 2026" },
+            { nama: "Ahmad Fauzi", capaian: "Jilid 4", detail: "Halaman 12", tanggal: "23 Jul 2026" }
+        ];
+
+        function loadLeaderboard() {
+            const tbody = document.getElementById('student-data');
+            tbody.innerHTML = '';
+            
+            mockData.forEach((siswa, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span class="rank-badge">${index + 1}</span></td>
+                    <td><strong>${siswa.nama}</strong></td>
+                    <td><span class="capaian-badge">${siswa.capaian}</span></td>
+                    <td>${siswa.detail}</td>
+                    <td>${siswa.tanggal}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Jalankan fungsi saat halaman dimuat
+        window.onload = loadLeaderboard;
+    </script>
+</body>
+</html>
