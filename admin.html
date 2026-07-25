@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin Mengaji</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚙️ Panel Admin</h1>
+            <p>Perbarui progres mengaji siswa</p>
+        </header>
+
+        <div class="card">
+            <form id="admin-form">
+                <div class="form-group">
+                    <label for="nama">Nama Siswa</label>
+                    <input type="text" id="nama" placeholder="Masukkan nama siswa..." required>
+                </div>
+                <div class="form-group">
+                    <label for="capaian">Capaian (Jilid/Surah)</label>
+                    <input type="text" id="capaian" placeholder="Contoh: Jilid 3 atau An-Naba" required>
+                </div>
+                <div class="form-group">
+                    <label for="detail">Detail (Halaman/Ayat)</label>
+                    <input type="text" id="detail" placeholder="Contoh: Hal 15 atau Ayat 1-10" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Simpan Progres</button>
+            </form>
+        </div>
+
+        <div class="footer-links">
+            <a href="index.html" class="btn">Kembali ke Leaderboard</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('admin-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Logika penyimpanan data akan diletakkan di sini.
+            // Karena GitHub Pages statis, kita butuh API eksternal (seperti Google Sheets)
+            alert('Fungsi simpan siap dihubungkan dengan database/Google Sheets!');
+            this.reset();
+        });
+    </script>
+</body>
+</html>
+
