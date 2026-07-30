@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pantau Mengaji PAY Muhammadiyah</title>
+  <!-- Menggunakan Tailwind CSS via CDN untuk desain yang rapi tanpa install -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800">
+
+  <!-- Header -->
+  <header class="bg-emerald-900 text-white p-6 shadow-md">
+    <div class="max-w-4xl mx-auto flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold">Pantau Mengaji PAY Kedungwuni</h1>
+        <p class="text-emerald-200 text-sm mt-1">Sistem Input Progres via Google Sheets</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <!-- Kolom Kiri: Form Input -->
+    <div class="md:col-span-1 bg-white p-6 rounded-xl shadow border border-slate-200 h-fit">
+      <h2 class="font-bold text-lg mb-4 text-emerald-900 border-b pb-2">Input Progres Harian</h2>
+      
+      <form id="formMengaji" class="space-y-4">
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">NIS Santri</label>
+          <input type="text" id="nis" required class="w-full p-2 border rounded bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="cth. 2026-01">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">Nama Santri</label>
+          <input type="text" id="nama" required class="w-full p-2 border rounded bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">Level Mengaji</label>
+          <select id="level" class="w-full p-2 border rounded bg-slate-50 outline-none">
+            <option value="Jilid 1">Jilid 1</option>
+            <option value="Jilid 2">Jilid 2</option>
+            <option value="Jilid 3">Jilid 3</option>
+            <option value="Jilid 4">Jilid 4</option>
+            <option value="Jilid 5">Jilid 5</option>
+            <option value="Jilid 6">Jilid 6</option>
+            <option value="Al-Qur'an">Al-Qur'an</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">Halaman / Surah</label>
+          <input type="text" id="halaman" required class="w-full p-2 border rounded bg-slate-50 focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="cth. Halaman 15">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1">Predikat</label>
+          <select id="predikat" class="w-full p-2 border rounded bg-slate-50 outline-none">
+            <option value="Sangat Lancar">Sangat Lancar</option>
+            <option value="Lancar">Lancar</option>
+            <option value="Mengulang">Mengulang</option>
+          </select>
+        </div>
+        
+        <button type="submit" id="btnSubmit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold py-2 px-4 rounded transition-colors">
+          Simpan ke Sheets
+        </button>
+      </form>
+      <div id="alertMessage" class="hidden mt-4 p-3 rounded text-sm font-bold text-center"></div>
+    </div>
+
+    <!-- Kolom Kanan: Tabel Data -->
+    <div class="md:col-span-2 bg-white p-6 rounded-xl shadow border border-slate-200">
+      <div class="flex justify-between items-center mb-4 border-b pb-2">
+        <h2 class="font-bold text-lg text-emerald-900">Data Progres Santri</h2>
+        <button onclick="loadData()" class="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1 rounded font-bold">
+          🔄 Refresh
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-slate-100 text-slate-700">
+              <th class="p-2 border">Nama</th>
+              <th class="p-2 border">Level</th>
+              <th class="p-2 border">Halaman</th>
+              <th class="p-2 border">Predikat</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr>
+              <td colspan="4" class="p-4 text-center text-slate-500">Memuat data dari Google Sheets...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // ⚠️ GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
+    const SCRIPT_URL = 'URL_APPS_SCRIPT_ANDA_DI_SINI';
+
+    // Fungsi mengambil data
+    async function loadData() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-500">Memuat data...</td></tr>';
+      
+      try {
+        const response = await fetch(SCRIPT_URL);
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          tbody.innerHTML = '';
+          // Urutkan dari yang terbaru
+          const dataSantri = result.data.reverse(); 
+          
+          if(dataSantri.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-slate-500">Belum ada data.</td></tr>';
+            return;
+          }
+
+          dataSantri.forEach(santri => {
+            const tr = document.createElement('tr');
+            tr.className = 'border-b hover:bg-slate-50';
+            tr.innerHTML = `
+              <td class="p-2 font-bold">${santri.Nama || '-'}</td>
+              <td class="p-2 text-emerald-800 font-semibold">${santri.Level || '-'}</td>
+              <td class="p-2">${santri.Halaman || '-'}</td>
+              <td class="p-2">${santri.Predikat || '-'}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      } catch (error) {
+        tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-red-500">Gagal memuat data.</td></tr>';
+        console.error('Error fetching data:', error);
+      }
+    }
+
+    // Fungsi mengirim data
+    document.getElementById('formMengaji').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const btnSubmit = document.getElementById('btnSubmit');
+      const alertBox = document.getElementById('alertMessage');
+      
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = 'Menyimpan...';
+      alertBox.classList.add('hidden');
+
+      const dataPayload = {
+        nis: document.getElementById('nis').value,
+        nama: document.getElementById('nama').value,
+        level: document.getElementById('level').value,
+        halaman: document.getElementById('halaman').value,
+        predikat: document.getElementById('predikat').value,
+      };
+
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(dataPayload)
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+          alertBox.innerText = 'Berhasil disimpan!';
+          alertBox.className = 'mt-4 p-3 rounded text-sm font-bold text-center bg-emerald-100 text-emerald-800 block';
+          document.getElementById('formMengaji').reset();
+          loadData(); // Otomatis refresh tabel
+        }
+      } catch (error) {
+        alertBox.innerText = 'Gagal menyimpan data!';
+        alertBox.className = 'mt-4 p-3 rounded text-sm font-bold text-center bg-red-100 text-red-800 block';
+        console.error('Error posting data:', error);
+      } finally {
+        btnSubmit.disabled = false;
+        btnSubmit.innerText = 'Simpan ke Sheets';
+        setTimeout(() => alertBox.classList.add('hidden'), 3000);
+      }
+    });
+
+    // Panggil data pertama kali saat web dibuka
+    window.onload = loadData;
+  </script>
+</body>
+</html>
